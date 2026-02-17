@@ -3,7 +3,8 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 use std::{fmt::Debug, io};
 use tdf::{
-    DecodeResult, TdfDeserialize, TdfDeserializer, TdfSerialize, types::bytes::serialize_bytes,
+    DecodeResult, TdfDeserialize, TdfDeserializer, TdfSerialize, TdfStringifier,
+    types::bytes::serialize_bytes,
 };
 use tokio_util::codec::{Decoder, Encoder};
 
@@ -180,5 +181,18 @@ impl Encoder<Packet> for PacketCodec {
     fn encode(&mut self, item: Packet, dst: &mut BytesMut) -> Result<(), Self::Error> {
         item.write(dst);
         Ok(())
+    }
+}
+
+impl Debug for Packet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let r = TdfDeserializer::new(&self.contents);
+        let mut out = String::new();
+
+        let mut s = TdfStringifier::new(r, &mut out);
+
+        let _ = s.stringify();
+
+        write!(f, "{out}")
     }
 }

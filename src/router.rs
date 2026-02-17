@@ -36,6 +36,8 @@ impl Router {
             packet.frame.msg_num
         );
 
+        println!("{:#?}\n", packet);
+
         match self.routes.get(&key) {
             Some(handler) => handler(session, packet).await,
             None => {

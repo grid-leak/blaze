@@ -18,6 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind("0.0.0.0:25565").await?;
 
     let router = build_router! {
+        0, 0 => routes::keep_alive,
         1, 10 => routes::authentication::login,
         1, 29 => routes::authentication::list_entitlments,
         9, 1 => routes::util::fetch_client_config,

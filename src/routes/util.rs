@@ -45,7 +45,7 @@ pub async fn fetch_client_config(_: &SessionLink, packet: &Packet) -> Packet {
             ("bugSentryDisableGpuHangReports", "true"),
             (
                 "engagementManagerApiEndpointUrlBase",
-                "http://localhost:42230/em/v2/messages",
+                "http://localhost:42230",
             ),
             ("engagementManagerClientId", "mirrorsedgecatalyst"),
             ("gatewayApiEndpointUrl", "http://localhost:3000"),
