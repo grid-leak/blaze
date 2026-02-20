@@ -1,4 +1,5 @@
 use crate::{
+    config,
     router::Router,
     socket::{BlazeRx, BlazeTx, spawn_socket},
 };
@@ -12,8 +13,6 @@ use tokio::{
     spawn,
 };
 use uuid::Uuid;
-
-pub const KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub type SessionLink = Arc<Session>;
 pub type WeakSessionLink = Weak<Session>;
@@ -82,8 +81,10 @@ impl SessionData {
 }
 
 async fn run_session(mut rx: BlazeRx, session: Arc<Session>, router: Arc<Router>) {
+    let timeout = Duration::from_secs(config::Settings::global().keep_alive_timeout.into());
+
     loop {
-        match tokio::time::timeout(KEEP_ALIVE_TIMEOUT, rx.recv()).await {
+        match tokio::time::timeout(timeout, rx.recv()).await {
             Ok(Some(packet)) => {
                 let response = router.handle(&session, &packet).await;
                 session.tx.notify(response);

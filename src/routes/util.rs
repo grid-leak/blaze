@@ -3,6 +3,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tdf::TdfMap;
 
 use crate::{
+    config,
     models::{
         user_sessions::{UpdateExtendedDataAttribute, UserSessionExtendedData},
         util::{
@@ -40,28 +41,11 @@ pub async fn fetch_client_config(_: &SessionLink, packet: &Packet) -> Packet {
         ]
         .into_iter()
         .collect(),
-        "PamplonaEndpoints" => [
-            ("bugSentryDisableCrashDumpCollection", "true"),
-            ("bugSentryDisableGpuHangReports", "true"),
-            (
-                "engagementManagerApiEndpointUrlBase",
-                "http://localhost:42230",
-            ),
-            ("engagementManagerClientId", "mirrorsedgecatalyst"),
-            ("gatewayApiEndpointUrl", "http://localhost:3000"),
-            ("gatewayClientId", "pamplona-backend-as-user-pc"),
-            (
-                "gatewayUploadEndpointUrl",
-                "http://localhost:5000/gatewayUpload",
-            ),
-            ("messageManagerFetchMessagesIntervalTime", "300.0"),
-            ("messageManagerTransientMessagesToFollowers", "false"),
-            ("npsWebUrlBase", "http://loclhost:6000/npsWeb"),
-            ("presenceUpdatePositionInterval", "10.0"),
-            ("telemetryProjectId", "308903"),
-        ]
-        .into_iter()
-        .collect(),
+        "PamplonaEndpoints" => config::Settings::global()
+            .endpoints
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect(),
         _ => {
             println!("unknown client config request {}", req.id);
             TdfMap::new()

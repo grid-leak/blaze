@@ -6,6 +6,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use uuid::Uuid;
 
+mod config;
 mod models;
 mod packet;
 mod router;
@@ -15,7 +16,7 @@ mod socket;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind("0.0.0.0:25565").await?;
+    config::Settings::init();
 
     let router = build_router! {
         0, 0 => routes::keep_alive,
@@ -32,6 +33,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let router = Arc::new(router);
+
+    let address = ("0.0.0.0", config::Settings::global().port);
+    let listener = TcpListener::bind(address).await?;
 
     loop {
         let (stream, _) = listener.accept().await?;

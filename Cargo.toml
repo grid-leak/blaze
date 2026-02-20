@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 bytes = "1.11.0"
+config = { version = "0.15.19", features = ["toml"] }
 dotenvy = "0.15.7"
 futures = "0.3.31"
 num-derive = "0.4"

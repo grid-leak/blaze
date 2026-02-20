@@ -1,0 +1,16 @@
+port = 25565
+keep_alive_timeout = 60
+
+[endpoints]
+bugSentryDisableCrashDumpCollection = "true"
+bugSentryDisableGpuHangReports = "true"
+engagementManagerApiEndpointUrlBase = "http://localhost:42230"
+engagementManagerClientId = "mirrorsedgecatalyst"
+gatewayApiEndpointUrl = "http://localhost:3000"
+gatewayClientId = "pamplona-backend-as-user-pc"
+gatewayUploadEndpointUrl = "http://localhost:5000/gatewayUpload"
+messageManagerFetchMessagesIntervalTime = "300.0"
+messageManagerTransientMessagesToFollowers = "false"
+npsWebUrlBase = "http://loclhost:6000/npsWeb"
+presenceUpdatePositionInterval = "10.0"
+telemetryProjectId = "308903"
