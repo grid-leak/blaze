@@ -1,10 +1,15 @@
 use std::sync::Arc;
 
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+
 use crate::{
+    db,
+    entities::accounts::{self, Column},
     models::{
         authentication::{AuthRequest, AuthResponse, Entitlement, ListEntitlementsResponse},
         user_sessions::UpdateHardwareFlags,
     },
+    oauth,
     packet::Packet,
     session::{SessionLink, User},
 };
@@ -12,23 +17,53 @@ use crate::{
 pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
     // TODO: don't unwrap
     let req: AuthRequest = Packet::deserialize(packet).unwrap();
-    println!("received login request for {}", req.token);
 
-    let user = User {
-        user_id: 2407107883,
-        persona_id: 1011786733,
-        username: "ploxxxxxxy".to_string(),
+    let discord_user = match oauth::fetch_discord_user(&req.token).await {
+        Ok(u) => u,
+        Err(e) => {
+            println!("discord auth failed: {e}");
+            return Packet::reply(packet, AuthResponse::error());
+        }
     };
 
-    session.data.set_user(Arc::new(user));
+    let account = match accounts::Entity::find()
+        .filter(Column::Provider.eq("discord"))
+        .filter(Column::ProviderUserId.eq(&discord_user.id))
+        .one(db::db())
+        .await
+    {
+        Ok(Some(a)) => a,
+        Ok(None) => {
+            println!(
+                "no account found for discord user {} ({})",
+                discord_user.username, discord_user.id
+            );
+            return Packet::reply(packet, AuthResponse::error());
+        }
+        Err(e) => {
+            println!("database error during login: {e}");
+            return Packet::reply(packet, AuthResponse::error());
+        }
+    };
 
-    // TODO: dont unwrap
-    let user = session.data.get_user().unwrap();
+    println!(
+        "authenticated discord user {}, persona_id {}",
+        discord_user.username, account.persona_id
+    );
+
+    let user = Arc::new(User {
+        user_id: account.persona_id as u32,
+        persona_id: account.persona_id as u32,
+        username: account.provider_username.clone(),
+    });
+
+    session.data.set_user(user.clone());
+
     let notification = Packet::notification(30722, 8, UpdateHardwareFlags { user: user.clone() });
 
     session.tx.notify(notification);
 
-    Packet::reply(packet, AuthResponse { user })
+    Packet::reply(packet, AuthResponse::ok(user))
 }
 
 static ENTITLEMENTS: &[Entitlement] = &[Entitlement::pc(

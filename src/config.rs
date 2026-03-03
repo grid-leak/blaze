@@ -7,6 +7,7 @@ use serde::Deserialize;
 pub struct Settings {
     pub port: u16,
     pub keep_alive_timeout: u32,
+    pub database_url: String,
     pub endpoints: HashMap<String, String>,
 }
 

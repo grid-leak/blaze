@@ -1,5 +1,6 @@
 port = 25565
 keep_alive_timeout = 60
+database_url = "postgres://user:password@localhost/pamplona"
 
 [endpoints]
 bugSentryDisableCrashDumpCollection = "true"

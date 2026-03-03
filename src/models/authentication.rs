@@ -11,35 +11,52 @@ pub struct AuthRequest {
 }
 
 pub struct AuthResponse {
-    pub user: Arc<User>,
+    user: Option<Arc<User>>,
+}
+
+impl AuthResponse {
+    pub fn ok(user: Arc<User>) -> Self {
+        Self { user: Some(user) }
+    }
+
+    pub fn error() -> Self {
+        Self { user: None }
+    }
 }
 
 impl TdfSerialize for AuthResponse {
     fn serialize<S: tdf::TdfSerializer>(&self, w: &mut S) {
-        w.tag_zero(b"CNTX");
-        w.tag_zero(b"ERRC");
-        w.tag_str(b"SKEY", "0");
-        w.tag_zero(b"ANON");
-        w.tag_zero(b"NTOS");
-        w.group(b"SESS", |w| {
-            w.tag_zero(b"1CON");
-            w.tag_u32(b"BUID", self.user.persona_id);
-            w.tag_zero(b"FRST");
-            w.tag_str(b"KEY", "0");
-            w.tag_u32(b"LLOG", 1700769352);
-            w.tag_str(b"MAIL", "******@beatrevival.me");
-            w.group(b"PDTL", |w| {
-                w.tag_str(b"DSNM", &self.user.username);
-                w.tag_zero(b"LAST");
-                w.tag_u32(b"PID", self.user.persona_id);
-                w.tag_u8(b"PLAT", 4);
-                w.tag_zero(b"STAS");
-                w.tag_u32(b"XREF", self.user.user_id);
-            });
-            w.tag_u32(b"UID", self.user.user_id);
-        });
-        w.tag_zero(b"SPAM");
-        w.tag_zero(b"UNDR");
+        match &self.user {
+            Some(user) => {
+                w.tag_zero(b"CNTX");
+                w.tag_zero(b"ERRC");
+                w.tag_str(b"SKEY", "0");
+                w.tag_zero(b"ANON");
+                w.tag_zero(b"NTOS");
+                w.group(b"SESS", |w| {
+                    w.tag_zero(b"1CON");
+                    w.tag_u32(b"BUID", user.persona_id);
+                    w.tag_zero(b"FRST");
+                    w.tag_str(b"KEY", "0");
+                    w.tag_u32(b"LLOG", 1700769352);
+                    w.tag_str(b"MAIL", "******@beatrevival.me");
+                    w.group(b"PDTL", |w| {
+                        w.tag_str(b"DSNM", &user.username);
+                        w.tag_zero(b"LAST");
+                        w.tag_u32(b"PID", user.persona_id);
+                        w.tag_u8(b"PLAT", 4);
+                        w.tag_zero(b"STAS");
+                        w.tag_u32(b"XREF", user.user_id);
+                    });
+                    w.tag_u32(b"UID", user.user_id);
+                });
+                w.tag_zero(b"SPAM");
+                w.tag_zero(b"UNDR");
+            }
+            None => {
+                w.tag_u32(b"ERRC", 1);
+            }
+        }
     }
 }
 

@@ -7,7 +7,10 @@ use tokio::net::TcpListener;
 use uuid::Uuid;
 
 mod config;
+mod db;
+mod entities;
 mod models;
+mod oauth;
 mod packet;
 mod router;
 mod routes;
@@ -17,6 +20,10 @@ mod socket;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     config::Settings::init();
+
+    db::init(&config::Settings::global().database_url)
+        .await
+        .expect("Failed to connect to database");
 
     let router = build_router! {
         0, 0 => routes::keep_alive,
