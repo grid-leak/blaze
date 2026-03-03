@@ -143,10 +143,19 @@ pub struct ClientConfigRequest {
     pub id: String,
 }
 
-#[derive(Debug, TdfSerialize)]
 pub struct ClientConfigResponse {
-    #[tdf(tag = "CONF")]
-    pub config: TdfMap<&'static str, &'static str>,
+    pub config: TdfMap<String, String>,
+}
+
+impl TdfSerialize for ClientConfigResponse {
+    fn serialize<S: TdfSerializer>(&self, w: &mut S) {
+        let entries: Vec<(&str, &str)> = self
+            .config
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
+        w.tag_map_tuples(b"CONF", &entries);
+    }
 }
 
 pub struct PostAuthResponse {

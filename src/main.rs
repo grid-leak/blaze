@@ -6,7 +6,6 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use uuid::Uuid;
 
-mod config;
 mod db;
 mod entities;
 mod models;
@@ -19,9 +18,15 @@ mod socket;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    config::Settings::init();
+    dotenvy::dotenv().ok();
 
-    db::init(&config::Settings::global().database_url)
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let port: u16 = std::env::var("PORT")
+        .expect("PORT must be set")
+        .parse()
+        .expect("PORT must be a valid u16");
+
+    db::init(&database_url)
         .await
         .expect("Failed to connect to database");
 
@@ -41,8 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let router = Arc::new(router);
 
-    let address = ("0.0.0.0", config::Settings::global().port);
-    let listener = TcpListener::bind(address).await?;
+    let listener = TcpListener::bind(("0.0.0.0", port)).await?;
 
     loop {
         let (stream, _) = listener.accept().await?;

@@ -1,0 +1,5 @@
+PORT=
+DATABASE_URL=
+GATEWAY_API_URL=http://localhost:3000
+GATEWAY_UPLOAD_URL=http://localhost:5000/gatewayUpload
+ENGAGEMENT_API_URL=http://localhost:42230

@@ -1,5 +1,4 @@
 use crate::{
-    config,
     router::Router,
     socket::{BlazeRx, BlazeTx, spawn_socket},
 };
@@ -80,8 +79,10 @@ impl SessionData {
     }
 }
 
+const KEEP_ALIVE_TIMEOUT: u64 = 60;
+
 async fn run_session(mut rx: BlazeRx, session: Arc<Session>, router: Arc<Router>) {
-    let timeout = Duration::from_secs(config::Settings::global().keep_alive_timeout.into());
+    let timeout = Duration::from_secs(KEEP_ALIVE_TIMEOUT);
 
     loop {
         match tokio::time::timeout(timeout, rx.recv()).await {
