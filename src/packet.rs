@@ -59,6 +59,17 @@ impl Fire2Frame {
     }
 }
 
+struct ErrorBody {
+    error: u32,
+}
+
+impl TdfSerialize for ErrorBody {
+    fn serialize<S: tdf::TdfSerializer>(&self, w: &mut S) {
+        w.tag_u32(b"CNTX", 0);
+        w.tag_u32(b"ERRC", self.error);
+    }
+}
+
 #[derive(Clone)]
 pub struct Packet {
     pub frame: Fire2Frame,
@@ -87,6 +98,11 @@ impl Packet {
 
     pub fn reply_empty(request: &Packet) -> Self {
         Self::empty(request.frame.reply())
+    }
+
+    pub fn error(request: &Packet, error: u32) -> Self {
+        // TODO: move ErrorBody to metadata
+        Self::reply(request, ErrorBody { error })
     }
 
     pub fn notification<T: TdfSerialize>(component: u16, command: u16, body: T) -> Self {

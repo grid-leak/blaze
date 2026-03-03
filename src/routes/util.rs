@@ -68,8 +68,13 @@ pub async fn ping(_: &SessionLink, packet: &Packet) -> Packet {
 }
 
 pub async fn fetch_client_config(_: &SessionLink, packet: &Packet) -> Packet {
-    // TODO: don't unwrap
-    let req: ClientConfigRequest = Packet::deserialize(packet).unwrap();
+    let req: ClientConfigRequest = match Packet::deserialize(packet) {
+        Ok(req) => req,
+        Err(e) => {
+            println!("failed to deserialize ClientConfigRequest: {e}");
+            return Packet::error(packet, 1);
+        }
+    };
 
     println!("received client config request for {}", req.id);
 
@@ -91,8 +96,13 @@ pub async fn fetch_client_config(_: &SessionLink, packet: &Packet) -> Packet {
 }
 
 pub async fn post_auth(session: &SessionLink, packet: &Packet) -> Packet {
-    // TODO: don't unwrap
-    let user = session.data.get_user().unwrap();
+    let user = match session.data.get_user() {
+        Some(user) => user,
+        None => {
+            println!("post_auth: no user in session");
+            return Packet::error(packet, 1);
+        }
+    };
 
     let notification =
         Packet::notification(30722, 5, UpdateExtendedDataAttribute { user: user.clone() });

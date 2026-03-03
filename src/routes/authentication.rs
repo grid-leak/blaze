@@ -15,14 +15,19 @@ use crate::{
 };
 
 pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
-    // TODO: don't unwrap
-    let req: AuthRequest = Packet::deserialize(packet).unwrap();
+    let req: AuthRequest = match Packet::deserialize(packet) {
+        Ok(req) => req,
+        Err(e) => {
+            println!("failed to deserialize AuthRequest: {e}");
+            return Packet::error(packet, 1);
+        }
+    };
 
     let discord_user = match oauth::fetch_discord_user(&req.token).await {
         Ok(u) => u,
         Err(e) => {
             println!("discord auth failed: {e}");
-            return Packet::reply(packet, AuthResponse::error());
+            return Packet::error(packet, 1);
         }
     };
 
@@ -38,11 +43,11 @@ pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
                 "no account found for discord user {} ({})",
                 discord_user.username, discord_user.id
             );
-            return Packet::reply(packet, AuthResponse::error());
+            return Packet::error(packet, 1);
         }
         Err(e) => {
             println!("database error during login: {e}");
-            return Packet::reply(packet, AuthResponse::error());
+            return Packet::error(packet, 1);
         }
     };
 
