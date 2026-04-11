@@ -23,6 +23,8 @@ static PAMPLONA_ENDPOINTS: LazyLock<TdfMap<String, String>> = LazyLock::new(|| {
         std::env::var("GATEWAY_UPLOAD_URL").expect("GATEWAY_UPLOAD_URL must be set");
     let engagement_api =
         std::env::var("ENGAGEMENT_API_URL").expect("ENGAGEMENT_API_URL must be set");
+    let gateway_client_id =
+        std::env::var("GATEWAY_CLIENT_ID").expect("GATEWAY_CLIENT_ID must be set");
 
     [
         ("bugSentryDisableCrashDumpCollection".into(), "true".into()),
@@ -33,10 +35,7 @@ static PAMPLONA_ENDPOINTS: LazyLock<TdfMap<String, String>> = LazyLock::new(|| {
             "mirrorsedgecatalyst".into(),
         ),
         ("gatewayApiEndpointUrl".into(), gateway_api),
-        (
-            "gatewayClientId".into(),
-            "pamplona-backend-as-user-pc".into(),
-        ),
+        ("gatewayClientId".into(), gateway_client_id),
         ("gatewayUploadEndpointUrl".into(), gateway_upload),
         (
             "messageManagerFetchMessagesIntervalTime".into(),
