@@ -7,7 +7,6 @@ use tokio::net::TcpListener;
 use uuid::Uuid;
 
 mod db;
-mod entities;
 mod models;
 mod oauth;
 mod packet;
