@@ -44,7 +44,7 @@ pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
         }
     };
 
-    let persona_id = match account {
+    let (persona_id, username) = match account {
         Some(existing) => {
             let persona_id = existing.persona_id;
             if existing.provider_username != discord_user.username {
@@ -55,7 +55,19 @@ pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
                     return Packet::error(packet, 1);
                 }
             }
-            persona_id
+
+            let local_user = match users::Entity::find_by_id(persona_id).one(db::db()).await {
+                Ok(Some(u)) => u,
+                Ok(None) => {
+                    println!("user record not found for persona_id {persona_id}");
+                    return Packet::error(packet, 1);
+                }
+                Err(e) => {
+                    println!("database error during user lookup: {e}");
+                    return Packet::error(packet, 1);
+                }
+            };
+            (persona_id, local_user.name)
         }
         None => {
             let new_user = users::ActiveModel {
@@ -96,19 +108,19 @@ pub async fn login(session: &SessionLink, packet: &Packet) -> Packet {
                 return Packet::error(packet, 1);
             }
 
-            persona_id
+            (persona_id, inserted_user.name)
         }
     };
 
     println!(
-        "authenticated discord user {}, persona_id {}",
-        discord_user.username, persona_id
+        "authenticated discord user {}, local user {}, persona_id {}",
+        discord_user.username, username, persona_id
     );
 
     let user = Arc::new(User {
         user_id: persona_id as u32,
         persona_id: persona_id as u32,
-        username: discord_user.username.clone(),
+        username,
     });
 
     session.data.set_user(user.clone());
