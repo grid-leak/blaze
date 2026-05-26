@@ -7,7 +7,7 @@ edition = "2024"
 bytes = "1.11.0"
 chrono = { version = "0.4.44", features = ["serde"] }
 dotenvy = "0.15.7"
-entities = { git = "https://github.com/grid-leak/entities", version = "0.1.0" }
+entities = { git = "https://github.com/grid-leak/entities", rev = "f99b24b" }
 futures = "0.3.31"
 num-derive = "0.4"
 num-traits = "0.2"

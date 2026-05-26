@@ -753,7 +753,7 @@ dependencies = [
 [[package]]
 name = "entities"
 version = "0.1.0"
-source = "git+https://github.com/grid-leak/entities#d74ff4aeee77b2638f7ef2b0fb63b65de76c3676"
+source = "git+https://github.com/grid-leak/entities?rev=f99b24b#f99b24b3ad893e53792ebe7af3d0f1fa0b793a22"
 dependencies = [
  "sea-orm",
 ]

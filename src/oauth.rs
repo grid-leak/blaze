@@ -18,6 +18,9 @@ pub enum OAuthError {
 
     #[error("Access token has expired")]
     ExpiredToken,
+
+    #[error("User doesn't have the required role")]
+    MissingRequiredRole,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +41,11 @@ pub struct OAuth2MeResponse {
     pub expires: DateTime<Utc>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct DiscordGuildMember {
+    pub roles: Vec<String>,
+}
+
 pub async fn fetch_discord_user(access_token: &str) -> Result<DiscordUser, OAuthError> {
     let client = reqwest::Client::new();
 
@@ -53,8 +61,8 @@ pub async fn fetch_discord_user(access_token: &str) -> Result<DiscordUser, OAuth
 
     let oauth_res = response.json::<OAuth2MeResponse>().await?;
 
-    let expected_client_id = std::env::var("DISCORD_CLIENT_ID")
-        .map_err(|_| OAuthError::MissingClientId)?;
+    let expected_client_id =
+        std::env::var("DISCORD_CLIENT_ID").map_err(|_| OAuthError::MissingClientId)?;
 
     if oauth_res.application.id != expected_client_id {
         return Err(OAuthError::InvalidClientId);
@@ -62,6 +70,27 @@ pub async fn fetch_discord_user(access_token: &str) -> Result<DiscordUser, OAuth
 
     if oauth_res.expires < Utc::now() {
         return Err(OAuthError::ExpiredToken);
+    }
+
+    // TODO: remove on release
+    // only Blaze has this check which is good enough for testing purposes
+    let member_response = client
+        .get("https://discord.com/api/v10/users/@me/guilds/1138913409405042708/member")
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+
+    if !member_response.status().is_success() {
+        return Err(OAuthError::MissingRequiredRole);
+    }
+
+    let member = member_response.json::<DiscordGuildMember>().await?;
+    if !member
+        .roles
+        .iter()
+        .any(|role| role == "1498771218076143811")
+    {
+        return Err(OAuthError::MissingRequiredRole);
     }
 
     Ok(oauth_res.user)
